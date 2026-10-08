@@ -44,7 +44,7 @@ jobs:
           
           ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
           
-          ssh -i ~/.ssh/vps_key "$SSH_USER@$SSH_HOST" << EOF
+          ssh -vvv -T -i ~/.ssh/vps_key "$SSH_USER@$SSH_HOST" << EOF
           echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
           
             docker pull $IMAGE_ID:latest
