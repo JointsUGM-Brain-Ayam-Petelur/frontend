@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 env:
   IMAGE_NAME: hear-able
@@ -33,18 +34,14 @@ jobs:
 
 
       - name: deploy to server
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USERNAME }}
         run: |
           mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/vps_key
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/vps_key
           chmod 600 ~/.ssh/vps_key
           
-          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
           
-          ssh -vvv -T -i ~/.ssh/vps_key "$SSH_USER@$SSH_HOST" << EOF
+          ssh -vvv -T -i ~/.ssh/vps_key "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" << EOF
           echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
           
             docker pull $IMAGE_ID:latest
@@ -54,6 +51,6 @@ jobs:
             docker run -d \
               --name $IMAGE_NAME \
               --restart unless-stopped \
-              -p 8787:8080 \
+              -p ${{ secrets.VPS_PORT }}:8080 \
               $IMAGE_ID:latest
           EOF
